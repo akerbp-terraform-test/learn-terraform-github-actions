@@ -1,16 +1,10 @@
 terraform {
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "3.26.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "3.0.1"
+        azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "=2.46.0"
     }
   }
-  required_version = ">= 1.1.0"
-
   cloud {
     organization = "AkerBP"
 
@@ -20,37 +14,21 @@ terraform {
   }
 }
 
-
-provider "aws" {
-  region = "eu-central-1"
+provider "azurerm" {
+    features {}
+    subscription_id = var.subscription_id
+    client_id       = var.client_id
+    client_secret   = var.client_secret
+    tenant_id       = var.tenant_id
 }
 
-
-
-resource "random_pet" "sg" {}
-
-resource "aws_instance" "web" {
-  ami                    = "ami-4e013753"
-  instance_type          = "t2.micro"
-  vpc_security_group_ids = [aws_security_group.web-sg.id]
-
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "Hello, World" > index.html
-              nohup busybox httpd -f -p 8080 &
-              EOF
+# New resource group
+resource "azurerm_resource_group" "rg" {
+    name     = var.resource_group_name
+    location = var.location
+    tags = {
+        Environment = "Test"
+        Owner = "admin.steinar.schei@akerbp.com"
+    }
 }
 
-resource "aws_security_group" "web-sg" {
-  name = "${random_pet.sg.id}-sg"
-  ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-output "web-address" {
-  value = "${aws_instance.web.public_dns}:8080"
-}
