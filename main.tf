@@ -14,21 +14,26 @@ terraform {
   }
 }
 
-provider "azurerm" {
-    features {}
-    subscription_id = var.subscription_id
-    client_id       = var.client_id
-    client_secret   = var.client_secret
-    tenant_id       = var.tenant_id
+
+#AWS
+provider "aws" {
+  region = "eu-central-1"
 }
 
-# New resource group
-resource "azurerm_resource_group" "rg" {
-    name     = var.resource_group_name
-    location = var.location
-    tags = {
-        Environment = "Test"
-        Owner = "admin.steinar.schei@akerbp.com"
-    }
+
+
+resource "random_pet" "sg" {}
+
+resource "aws_instance" "web" {
+  ami                    = "ami-4e013753"
+  instance_type          = "t2.micro"
+  vpc_security_group_ids = [aws_security_group.web-sg.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "Hello, World" > index.html
+              nohup busybox httpd -f -p 8080 &
+              EOF
 }
+
 
